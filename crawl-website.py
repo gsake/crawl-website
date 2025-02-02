@@ -3,13 +3,15 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import time
 import json
+import argparse
+
 
 # Function to check if the link is internal or external
 def is_internal(url, domain):
   return urlparse(url).netloc == domain
 
 # Function to crawl a website recursively and collect internal and external links
-def crawl_website(start_url):
+def crawl_website(start_url, filetype):
   visited = set()  # To avoid visiting the same URL multiple times
   internal_links = set()
   external_links = set()
@@ -36,7 +38,7 @@ def crawl_website(start_url):
           if is_internal(link_url, domain):
             internal_links.add(link_url)
             # print(link_url)
-            if link_url.find(".pdf") == -1:
+            if link_url.find("." + filetype) == -1:
               crawl(link_url)  # Recursively crawl internal links
             else:
               if link.get('target') == None or link.get('target').find("_blank") == -1:
@@ -59,8 +61,17 @@ def crawl_website(start_url):
 
 # Example usage:
 if __name__ == '__main__':
-  start_url = 'https://en.triton-am.com'  # Replace with the starting URL
-  internal, external, pdf = crawl_website(start_url)
+
+  parser = argparse.ArgumentParser()
+
+  parser.add_argument('-u', "--url", type=str, required=True) # "The URL to Crawl")
+  parser.add_argument('-f', "--filetype", type=str, required=True) # "The file type to search for")
+
+  args = parser.parse_args()
+  # print(args)
+
+
+  internal, external, pdf = crawl_website(args.url, args.filetype)
   
   # print("Internal Links:")
   # for link in internal:
@@ -70,7 +81,7 @@ if __name__ == '__main__':
   # for link in external:
   #   print(link)
 
-  print("PDF Links:")
+  print(f"Links of type {args.filetype} on website {args.url} are:")
   url = "None"
   for link in pdf:
     if url != link['url']:
